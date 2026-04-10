@@ -196,3 +196,180 @@ class PessoaFisica(Cliente):
     @property
     def data_nascimento(self) -> str:
         return self._data_nascimento
+
+
+class Banco:
+    def __init__(self):
+        self._clientes: list[Cliente] = []
+        self._contas: list[Conta] = []
+        self._agencia = "0001"
+        self._numero_conta = 1
+
+    @property
+    def clientes(self) -> list[Cliente]:
+        return self._clientes
+
+    @property
+    def contas(self) -> list[Conta]:
+        return self._contas
+
+    @property
+    def agencia(self) -> str:
+        return self._agencia
+
+    def buscar_cliente(self, cpf: str) -> Cliente | None:
+        for cliente in self._clientes:
+            if isinstance(cliente, PessoaFisica) and cliente.cpf == cpf:
+                return cliente
+        return None
+
+    def criar_cliente(
+        self, cpf: str, nome: str, data_nascimento: str, endereco: str
+    ) -> Cliente:
+        existente = self.buscar_cliente(cpf)
+        if existente:
+            print("\n@@@ Já existe usuário com esse CPF! @@@")
+            return existente
+        cliente = PessoaFisica(cpf, nome, data_nascimento, endereco)
+        self._clientes.append(cliente)
+        print("=== Usuário criado com sucesso! ===")
+        return cliente
+
+    def criar_conta(self, cliente: Cliente) -> Conta:
+        conta = ContaCorrente(self._numero_conta, self._agencia, cliente)
+        self._contas.append(conta)
+        self._numero_conta += 1
+        print("\n=== Conta criada com sucesso! ===")
+        return conta
+
+    def listar_contas(self) -> None:
+        for conta in self._contas:
+            titular = conta.cliente
+            nome_titular = (
+                titular.nome if isinstance(titular, PessoaFisica) else "Unknown"
+            )
+            print(f"""
+===========================================
+Agência:\t{conta.agencia}
+C/C:\t\t{conta.numero}
+Titular:\t{nome_titular}
+Saldo:\t\tR$ {conta.saldo:.2f}
+===========================================""")
+
+
+def menu():
+    menu = """
+    ================ MENU ================
+    [d]\tDepositar
+    [s]\tSacar
+    [e]\tExtrato
+    [nc]\tNova conta
+    [lc]\tListar contas
+    [nu]\tNovo usuário
+    [q]\tSair
+    => """
+    return input(textwrap.dedent(menu))
+
+
+def main():
+    import textwrap
+
+    banco = Banco()
+
+    while True:
+        opcao = menu()
+
+        if opcao == "d":
+            cpf = input("Informe o CPF do usuário: ")
+            cliente = banco.buscar_cliente(cpf)
+            if not cliente:
+                print("\n@@@ Usuário não encontrado! @@@")
+                continue
+            if not cliente.contas:
+                print("\n@@@ Você precisa cadastrar uma conta primeiro! @@@")
+                continue
+            valor = float(input("Informe o valor do depósito: "))
+            conta = cliente.contas[0]
+            conta.depositar(valor)
+
+        elif opcao == "s":
+            cpf = input("Informe o CPF do usuário: ")
+            cliente = banco.buscar_cliente(cpf)
+            if not cliente:
+                print("\n@@@ Usuário não encontrado! @@@")
+                continue
+            if not cliente.contas:
+                print("\n@@@ Você precisa cadastrar uma conta primeiro! @@@")
+                continue
+            valor = float(input("Informe o valor do saque: "))
+            conta = cliente.contas[0]
+            conta.sacar(valor)
+
+        elif opcao == "e":
+            cpf = input("Informe o CPF do usuário: ")
+            cliente = banco.buscar_cliente(cpf)
+            if not cliente:
+                print("\n@@@ Usuário não encontrado! @@@")
+                continue
+            if not cliente.contas:
+                print("\n@@@ Você precisa cadastrar uma conta primeiro! @@@")
+                continue
+            conta = cliente.contas[0]
+            print("\n================ EXTRATO ================")
+            transacoes = conta.historico.transacoes
+            if not transacoes:
+                print("Não foram realizadas movimentações.")
+            else:
+                for t in transacoes:
+                    tipo = "Depósito" if isinstance(t, Deposito) else "Saque"
+                    print(f"{tipo}:\tR$ {t.valor:.2f}")
+            print(f"\nSaldo:\t\tR$ {conta.saldo:.2f}")
+            print("==========================================")
+
+        elif opcao == "nu":
+            cpf = input("Informe o CPF (somente número): ")
+            nome = input("Informe o nome completo: ")
+            data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+            endereco = input(
+                "Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): "
+            )
+            banco.criar_cliente(cpf, nome, data_nascimento, endereco)
+
+        elif opcao == "nc":
+            cpf = input("Informe o CPF do usuário: ")
+            cliente = banco.buscar_cliente(cpf)
+            if cliente:
+                banco.criar_conta(cliente)
+            else:
+                print("\n@@@ Usuário não encontrado! @@@")
+
+        elif opcao == "lc":
+            cpf = input("Informe o CPF do usuário: ")
+            cliente = banco.buscar_cliente(cpf)
+            if not cliente:
+                print("\n@@@ Usuário não encontrado! @@@")
+                continue
+            if not cliente.contas:
+                print("\n@@@ Usuário não possui contas! @@@")
+                continue
+            for conta in cliente.contas:
+                print(f"""
+===========================================
+Agência:\t{conta.agencia}
+C/C:\t\t{conta.numero}
+Saldo:\t\tR$ {conta.saldo:.2f}
+===========================================""")
+
+        elif opcao == "q":
+            break
+
+        else:
+            print(
+                "Operação inválida, por favor selecione novamente a operação desejada."
+            )
+
+
+if __name__ == "__main__":
+    import textwrap
+
+    main()
