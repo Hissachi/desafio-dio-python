@@ -50,3 +50,15 @@ class Saque(Transacao):
 
     def registrar(self, conta: "Conta") -> None:
         conta.sacar(self.valor)
+
+
+class Historico:
+    def __init__(self):
+        self._transacoes: list[Transacao] = []
+
+    def adicionar_transacao(self, transacao: Transacao) -> None:
+        self._transacoes.append(transacao)
+
+    @property
+    def transacoes(self) -> list[Transacao]:
+        return self._transacoes
