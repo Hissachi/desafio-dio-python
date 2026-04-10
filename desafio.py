@@ -242,6 +242,21 @@ class Banco:
         print("\n=== Conta criada com sucesso! ===")
         return conta
 
+    def listar_clientes(self) -> None:
+        if not self._clientes:
+            print("\n@@@ Nao ha nenhum usuario criado ainda! @@@")
+            return
+        for cliente in self._clientes:
+            if isinstance(cliente, PessoaFisica):
+                print(f"""
+===========================================
+CPF:\t\t{cliente.cpf}
+Nome:\t\t{cliente.nome}
+Nascimento:\t{cliente.data_nascimento}
+Endereço:\t{cliente.endereco}
+Contas:\t\t{len(cliente.contas)}
+===========================================""")
+
     def listar_contas(self) -> None:
         for conta in self._contas:
             titular = conta.cliente
@@ -265,6 +280,7 @@ def menu():
     [e]\tExtrato
     [nc]\tNova conta
     [lc]\tListar contas
+    [lu]\tListar usuários
     [nu]\tNovo usuário
     [q]\tSair
     => """
@@ -359,6 +375,9 @@ Agência:\t{conta.agencia}
 C/C:\t\t{conta.numero}
 Saldo:\t\tR$ {conta.saldo:.2f}
 ===========================================""")
+
+        elif opcao == "lu":
+            banco.listar_clientes()
 
         elif opcao == "q":
             break
